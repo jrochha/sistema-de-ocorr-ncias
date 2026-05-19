@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Ocorrências</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()">🌙 Modo escuro</button>
+  <main class="container">
+    <header class="topo">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da escola" class="logo">
+      <div>
+        <h1>Sistema de Registro de Ocorrências</h1>
+        <p>Escola Estadual Padre Manuel da Nóbrega - E.F. Tempo Integral</p>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <section class="card">
+      <form method="POST" id="formOcorrencia">
+        <div class="grid">
+          <label>Professor(a) / Servidor(a)
+            <select name="professor" required>
+              <option value="">Selecione</option>
+              {% for p in professores %}<option>{{ p }}</option>{% endfor %}
+            </select>
+          </label>
+
+          <label>Turma
+            <select name="turma" id="turma" required onchange="filtrarAlunos()">
+              <option value="">Selecione</option>
+              {% for t in turmas %}<option>{{ t }}</option>{% endfor %}
+            </select>
+          </label>
+
+          <label>Aluno(a)
+            <select name="aluno" id="aluno" required onchange="atualizarResponsavel()">
+              <option value="">Selecione a turma primeiro</option>
+            </select>
+          </label>
+
+          <label>Responsável
+            <input type="text" id="responsavel" readonly placeholder="Preenchido automaticamente">
+          </label>
+
+          <label>Componente curricular / Setor
+            <select name="disciplina" required>
+              <option value="">Selecione</option>
+              {% for d in disciplinas %}<option>{{ d }}</option>{% endfor %}
+            </select>
+          </label>
+
+          <label>Intensidade
+            <select name="intensidade" required>
+              <option value="">Selecione</option>
+              {% for i in intensidades %}<option>{{ i }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+
+        <label>Tipo de ocorrência
+          <select name="tipo" required>
+            <option value="">Selecione</option>
+            {% for tipo in tipos %}<option>{{ tipo }}</option>{% endfor %}
+          </select>
+        </label>
+
+        <label>Encaminhamento realizado
+          <select name="encaminhamento" required>
+            <option value="">Selecione</option>
+            {% for e in encaminhamentos %}<option>{{ e }}</option>{% endfor %}
+          </select>
+        </label>
+
+        <label>Observações complementares, se necessário
+          <textarea name="observacoes" rows="4" placeholder="Campo opcional"></textarea>
+        </label>
+
+        <button class="btn" type="submit">Registrar ocorrência e gerar PDF</button>
+      </form>
+    </section>
+
+    <a class="link" href="{{ url_for('historico') }}">Ver histórico de ocorrências</a>
+  </main>
+
+  <script>
+    const alunos = {{ alunos|tojson }};
+
+    function filtrarAlunos() {
+      const turma = document.getElementById('turma').value;
+      const selectAluno = document.getElementById('aluno');
+      const responsavel = document.getElementById('responsavel');
+      selectAluno.innerHTML = '<option value="">Selecione</option>';
+      responsavel.value = '';
+      alunos.filter(a => a.turma === turma).forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.nome;
+        opt.textContent = a.nome;
+        selectAluno.appendChild(opt);
+      });
+    }
+
+    function atualizarResponsavel() {
+      const nome = document.getElementById('aluno').value;
+      const aluno = alunos.find(a => a.nome === nome);
+      document.getElementById('responsavel').value = aluno ? aluno.responsavel : '';
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('tema', document.body.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    if (localStorage.getItem('tema') === 'dark') {
+      document.body.classList.add('dark');
+    }
+  </script>
+</body>
+</html>

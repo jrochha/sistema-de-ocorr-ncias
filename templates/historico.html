@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Histórico</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container wide">
+    <header class="topo">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da escola" class="logo">
+      <div>
+        <h1>Histórico de Ocorrências</h1>
+        <p>Últimos registros realizados</p>
+      </div>
+    </header>
+    <section class="card table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Aluno</th><th>Turma</th><th>Professor</th><th>Tipo</th><th>PDF</th></tr></thead>
+        <tbody>
+          {% for o in ocorrencias %}
+          <tr>
+            <td>{{ o.data_hora }}</td><td>{{ o.aluno }}</td><td>{{ o.turma }}</td><td>{{ o.professor }}</td><td>{{ o.tipo }}</td>
+            <td><a href="{{ url_for('baixar_pdf', filename=o.pdf) }}">Baixar</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    <a class="link" href="{{ url_for('index') }}">Voltar</a>
+  </main>
+</body>
+</html>
