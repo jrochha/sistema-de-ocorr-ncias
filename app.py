@@ -311,6 +311,9 @@ def enviar_email(dados, pdf_path):
     senha = os.environ.get("EMAIL_SENHA_APP")
     destinatarios = [e.strip() for e in os.environ.get("EMAIL_DESTINATARIOS", "").split(",") if e.strip()]
 
+    smtp_host = os.environ.get("SMTP_HOST", "smtp-relay.brevo.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+
     if not remetente or not senha or not destinatarios:
         return False, "E-mail não configurado nas variáveis de ambiente."
 
@@ -329,7 +332,8 @@ def enviar_email(dados, pdf_path):
         )
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as smtp:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as smtp:
+            smtp.starttls()
             smtp.login(remetente, senha)
             smtp.send_message(msg)
 
@@ -338,8 +342,8 @@ def enviar_email(dados, pdf_path):
     except Exception as e:
         return False, f"PDF gerado, mas houve erro ao enviar e-mail: {e}"
 
-
 @app.route("/", methods=["GET", "POST"])
+
 def index():
     if request.method == "POST":
         professor = request.form.get("professor")
