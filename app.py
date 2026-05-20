@@ -6,6 +6,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from email.message import EmailMessage
 import smtplib
 import os
