@@ -7,20 +7,57 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
   <main class="container">
+
     <header class="topo">
       <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo da escola" class="logo">
+
       <div>
         <h1>Ocorrência registrada</h1>
         <p>PDF gerado automaticamente</p>
       </div>
     </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     <section class="card">
+
       <h2>Texto gerado</h2>
-      <p class="texto-gerado">{{ dados.texto }}</p>
-      <a class="btn" href="{{ url_for('baixar_pdf', filename=pdf_file) }}">Baixar PDF</a>
-      <a class="btn secondary" href="{{ url_for('index') }}">Novo registro</a>
+
+      <p class="texto-gerado">
+        {{ dados.texto }}
+      </p>
+
+      <div class="acoes">
+
+        <a class="btn" href="{{ url_for('baixar_pdf', filename=pdf_file) }}">
+          📄 Baixar PDF
+        </a>
+
+        <form action="{{ url_for('reenviar_email', filename=pdf_file) }}" method="POST">
+
+          <button class="btn-email" type="submit">
+            📧 Enviar e-mail
+          </button>
+
+        </form>
+
+        <a class="btn secondary" href="{{ url_for('index') }}">
+          ➕ Novo registro
+        </a>
+
+      </div>
+
     </section>
+
   </main>
+
 </body>
 </html>
