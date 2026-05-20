@@ -1,17 +1,16 @@
+import requests
+import base64
+import os
+import sqlite3
+
 from flask import Flask, render_template, request, send_file, redirect, url_for, flash
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.pdfbase.pdfmetrics import stringWidth
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from email.message import EmailMessage
-import smtplib
-import os
-import sqlite3
-import textwrap
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "chave-dev-trocar")
