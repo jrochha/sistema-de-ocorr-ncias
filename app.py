@@ -307,39 +307,55 @@ def salvar_banco(dados, filename):
 
 def enviar_email(dados, pdf_path):
     remetente = os.environ.get("EMAIL_REMETENTE")
-    senha = os.environ.get("EMAIL_SENHA_APP")
     destinatarios = [e.strip() for e in os.environ.get("EMAIL_DESTINATARIOS", "").split(",") if e.strip()]
+    brevo_api_key = os.environ.get("BREVO_API_KEY")
 
-    smtp_host = os.environ.get("SMTP_HOST", "smtp-relay.brevo.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-
-    if not remetente or not senha or not destinatarios:
+    if not remetente or not destinatarios or not brevo_api_key:
         return False, "E-mail não configurado nas variáveis de ambiente."
 
-    msg = EmailMessage()
-    msg["Subject"] = f"Nova ocorrência escolar - {dados['aluno']} - {dados['turma']}"
-    msg["From"] = remetente
-    msg["To"] = ", ".join(destinatarios)
-    msg.set_content(f"Segue nova ocorrência registrada no sistema.\n\n{dados['texto']}")
-
     with open(pdf_path, "rb") as f:
-        msg.add_attachment(
-            f.read(),
-            maintype="application",
-            subtype="pdf",
-            filename=os.path.basename(pdf_path)
-        )
+        pdf_base64 = base64.b64encode(f.read()).decode("utf-8")
+
+    payload = {
+        "sender": {
+            "name": "Sistema de Ocorrências Escolares",
+            "email": remetente
+        },
+        "to": [{"email": email} for email in destinatarios],
+        "subject": f"Nova ocorrência escolar - {dados['aluno']} - {dados['turma']}",
+        "htmlContent": f"""
+        <p>Segue nova ocorrência registrada no sistema.</p>
+        <p>{dados['texto']}</p>
+        """,
+        "attachment": [
+            {
+                "content": pdf_base64,
+                "name": os.path.basename(pdf_path)
+            }
+        ]
+    }
+
+    headers = {
+        "accept": "application/json",
+        "api-key": brevo_api_key,
+        "content-type": "application/json"
+    }
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as smtp:
-            smtp.starttls()
-            smtp.login(remetente, senha)
-            smtp.send_message(msg)
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers=headers,
+            timeout=20
+        )
 
-        return True, "E-mail enviado com sucesso."
+        if response.status_code in [200, 201, 202]:
+            return True, "E-mail enviado com sucesso."
+
+        return False, f"PDF gerado, mas a API Brevo retornou erro {response.status_code}: {response.text}"
 
     except Exception as e:
-        return False, f"PDF gerado, mas houve erro ao enviar e-mail: {e}"
+        return False, f"PDF gerado, mas houve erro ao enviar e-mail pela API Brevo: {e}"
 
 @app.route("/", methods=["GET", "POST"])
 
