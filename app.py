@@ -260,8 +260,44 @@ def gerar_pdf(dados):
     elementos.append(Paragraph("Texto da ocorrência", ParagraphStyle('Secao', parent=styles['Heading2'], fontSize=12, textColor=colors.HexColor('#08345f'))))
     elementos.append(Paragraph(dados["texto"], normal))
     elementos.append(Spacer(1, 1.2*cm))
-    elementos.append(Paragraph("______________________________________________", subtitulo))
-    elementos.append(Paragraph("Assinatura / ciência da equipe escolar", subtitulo))
+
+assinaturas = [
+    [
+        Paragraph("________________________________________", subtitulo),
+        Paragraph("________________________________________", subtitulo),
+    ],
+    [
+        Paragraph(dados["aluno"], subtitulo),
+        Paragraph(dados["responsavel"], subtitulo),
+    ],
+    [
+        Paragraph("Assinatura do(a) estudante", subtitulo),
+        Paragraph("Assinatura do(a) responsável", subtitulo),
+    ],
+    ["", ""],
+    [
+        Paragraph("________________________________________", subtitulo),
+        Paragraph("", subtitulo),
+    ],
+    [
+        Paragraph(dados["professor"], subtitulo),
+        Paragraph("", subtitulo),
+    ],
+    [
+        Paragraph("Servidor(a) que realizou o registro", subtitulo),
+        Paragraph("", subtitulo),
+    ],
+]
+
+tabela_assinaturas = Table(assinaturas, colWidths=[8*cm, 8*cm])
+tabela_assinaturas.setStyle(TableStyle([
+    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+    ('TOPPADDING', (0,0), (-1,-1), 4),
+]))
+
+elementos.append(tabela_assinaturas)
     doc.build(elementos)
     return filename, caminho
 
