@@ -213,20 +213,30 @@ def gerar_texto(data_hora_br, professor, turma, aluno, responsavel, disciplina, 
 
 def gerar_pdf(dados):
     nome_seguro = dados["aluno"].replace(" ", "_").replace("/", "-")
-    filename = f"ocorrencia_{nome_seguro}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    filename = f"ocorrencia_{nome_seguro}_{datetime.now(ZoneInfo('America/Sao_Paulo')).strftime('%Y%m%d_%H%M%S')}.pdf"
     caminho = os.path.join(PDF_DIR, filename)
 
-    doc = SimpleDocTemplate(caminho, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
+    doc = SimpleDocTemplate(
+        caminho,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=1.5*cm,
+        bottomMargin=1.5*cm
+    )
+
     styles = getSampleStyleSheet()
     normal = ParagraphStyle('NormalCustom', parent=styles['Normal'], fontSize=10, leading=14)
     titulo = ParagraphStyle('Titulo', parent=styles['Title'], fontSize=15, textColor=colors.HexColor('#08345f'), alignment=1)
     subtitulo = ParagraphStyle('Subtitulo', parent=styles['Normal'], fontSize=10, alignment=1, textColor=colors.HexColor('#0b5b78'))
 
     elementos = []
+
     if os.path.exists(LOGO_PATH):
         img = Image(LOGO_PATH, width=2.6*cm, height=2.6*cm)
         img.hAlign = 'CENTER'
         elementos.append(img)
+
     elementos.append(Paragraph("Sistema de Registro de Ocorrências Escolares", titulo))
     elementos.append(Paragraph("Escola Estadual Padre Manuel da Nóbrega - E.F. Tempo Integral", subtitulo))
     elementos.append(Spacer(1, 0.4*cm))
@@ -242,6 +252,7 @@ def gerar_pdf(dados):
         ["Intensidade", dados["intensidade"]],
         ["Encaminhamento", dados["encaminhamento"]],
     ]
+
     table = Table(tabela, colWidths=[4.2*cm, 11.8*cm])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#08345f')),
@@ -255,52 +266,36 @@ def gerar_pdf(dados):
         ('TOPPADDING', (0,0), (-1,-1), 6),
         ('BOTTOMPADDING', (0,0), (-1,-1), 6),
     ]))
+
     elementos.append(table)
     elementos.append(Spacer(1, 0.5*cm))
-    elementos.append(Paragraph("Texto da ocorrência", ParagraphStyle('Secao', parent=styles['Heading2'], fontSize=12, textColor=colors.HexColor('#08345f'))))
+
+    elementos.append(Paragraph(
+        "Texto da ocorrência",
+        ParagraphStyle('Secao', parent=styles['Heading2'], fontSize=12, textColor=colors.HexColor('#08345f'))
+    ))
     elementos.append(Paragraph(dados["texto"], normal))
-    elementos.append(Spacer(1, 1.2*cm))
 
-assinaturas = [
-    [
-        Paragraph("________________________________________", subtitulo),
-        Paragraph("________________________________________", subtitulo),
-    ],
-    [
-        Paragraph(dados["aluno"], subtitulo),
-        Paragraph(dados["responsavel"], subtitulo),
-    ],
-    [
-        Paragraph("Assinatura do(a) estudante", subtitulo),
-        Paragraph("Assinatura do(a) responsável", subtitulo),
-    ],
-    ["", ""],
-    [
-        Paragraph("________________________________________", subtitulo),
-        Paragraph("", subtitulo),
-    ],
-    [
-        Paragraph(dados["professor"], subtitulo),
-        Paragraph("", subtitulo),
-    ],
-    [
-        Paragraph("Servidor(a) que realizou o registro", subtitulo),
-        Paragraph("", subtitulo),
-    ],
-]
+    elementos.append(Spacer(1, 1.0*cm))
 
-tabela_assinaturas = Table(assinaturas, colWidths=[8*cm, 8*cm])
-tabela_assinaturas.setStyle(TableStyle([
-    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-    ('TOPPADDING', (0,0), (-1,-1), 4),
-]))
+    elementos.append(Paragraph("______________________________________________", subtitulo))
+    elementos.append(Paragraph(dados["aluno"], subtitulo))
+    elementos.append(Paragraph("Assinatura do(a) estudante", subtitulo))
 
-elementos.append(tabela_assinaturas)
+    elementos.append(Spacer(1, 0.7*cm))
+
+    elementos.append(Paragraph("______________________________________________", subtitulo))
+    elementos.append(Paragraph(dados["responsavel"], subtitulo))
+    elementos.append(Paragraph("Assinatura do(a) responsável", subtitulo))
+
+    elementos.append(Spacer(1, 0.7*cm))
+
+    elementos.append(Paragraph("______________________________________________", subtitulo))
+    elementos.append(Paragraph(dados["professor"], subtitulo))
+    elementos.append(Paragraph("Servidor(a) que realizou o registro", subtitulo))
+
     doc.build(elementos)
     return filename, caminho
-
 
 def salvar_banco(dados, filename):
     with sqlite3.connect(DB_PATH) as conn:
