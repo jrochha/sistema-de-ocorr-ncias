@@ -1,16 +1,17 @@
-import requests
-import base64
-import os
-import sqlite3
-
 from flask import Flask, render_template, request, send_file, redirect, url_for, flash
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from email.message import EmailMessage
+import smtplib
+import os
+import sqlite3
+import textwrap
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "chave-dev-trocar")
@@ -22,14 +23,14 @@ DB_PATH = os.path.join(BASE_DIR, "ocorrencias.db")
 LOGO_PATH = os.path.join(BASE_DIR, "static", "logo.png")
 
 PROFESSORES = sorted([
-    "Prof. Ana Maria de Lima", "Prof. Alliny Rodrigues Peixe", "Prof. Bibiana Maria Bispo", "Danielly Furlaneto Firmino - Assist. Adm.",
-    "Prof. Evanilda de Souza Trindade", "Prof. Fabiola de Oliveira Herbella", "Prof. Felipe Paulo de Souza",
-    "Prof. Iwlly Rafaela Mendes", "Izaira Moreira Veiga - Pedagoga", "Prof. Jaqueline Bonifácio Michelato",
-    "Janaína Letícia Panaggio - Secretária", "Juliana Aparecida Gonçalves - Pedagoga", "Prof. Juliana Ferri",
-    "Prof. Katy Tondelli", "Prof. Kelen Cristina Leão", "Prof. Lorena Cristina de Oliveira Fernandes",
-    "Lucas da Costa Ferreira - Assist. Adm.", "Prof. Luzia Nogueira", "Prof. Marcel Dancini Rodrigues",
-    "Prof. Marco Aurélio Sant Ana", "Prof. Miriam Aparecida de Souza Dias", "Prof. Patrícia Janoni",
-    "Romilson Lopes Leite - Inspetor", "Thiago José da Rocha - Diretor"
+    "Ana Maria de Lima","Alliny Rodrigues Peixe", "Bibiana Maria Bispo", "Danielly Furlaneto Firmino",
+    "Evanilda de Souza Trindade", "Fabiola de Oliveira Herbella", "Felipe Paulo de Souza",
+    "Iwlly Rafaela Mendes", "Izaira Moreira Veiga", "Jaqueline Bonifácio Michelato",
+    "Janaína Letícia Panaggio", "Juliana Aparecida Gonçalves", "Juliana Ferri",
+    "Katy Tondelli", "Kelen Cristina Leão", "Lorena Cristina de Oliveira Fernandes",
+    "Lucas da Costa Ferreira", "Luzia Nogueira", "Marcel Dancini Rodrigues",
+    "Marco Aurélio Sant Ana", "Miriam Aparecida de Souza Dias", "Patrícia Janoni",
+    "Romilson Lopes Leite", "Thiago José da Rocha"
 ])
 
 DISCIPLINAS = [
@@ -307,58 +308,30 @@ def salvar_banco(dados, filename):
 
 def enviar_email(dados, pdf_path):
     remetente = os.environ.get("EMAIL_REMETENTE")
+    senha = os.environ.get("EMAIL_SENHA_APP")
     destinatarios = [e.strip() for e in os.environ.get("EMAIL_DESTINATARIOS", "").split(",") if e.strip()]
-    brevo_api_key = os.environ.get("BREVO_API_KEY")
-
-    if not remetente or not destinatarios or not brevo_api_key:
+    if not remetente or not senha or not destinatarios:
         return False, "E-mail não configurado nas variáveis de ambiente."
 
+    msg = EmailMessage()
+    msg["Subject"] = f"Nova ocorrência escolar - {dados['aluno']} - {dados['turma']}"
+    msg["From"] = remetente
+    msg["To"] = ", ".join(destinatarios)
+    msg.set_content(f"Segue nova ocorrência registrada no sistema.\n\n{dados['texto']}")
+
     with open(pdf_path, "rb") as f:
-        pdf_base64 = base64.b64encode(f.read()).decode("utf-8")
-
-    payload = {
-        "sender": {
-            "name": "Sistema de Ocorrências Escolares",
-            "email": remetente
-        },
-        "to": [{"email": email} for email in destinatarios],
-        "subject": f"Nova ocorrência escolar - {dados['aluno']} - {dados['turma']}",
-        "htmlContent": f"""
-        <p>Segue nova ocorrência registrada no sistema.</p>
-        <p>{dados['texto']}</p>
-        """,
-        "attachment": [
-            {
-                "content": pdf_base64,
-                "name": os.path.basename(pdf_path)
-            }
-        ]
-    }
-
-    headers = {
-        "accept": "application/json",
-        "api-key": brevo_api_key,
-        "content-type": "application/json"
-    }
+        msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=os.path.basename(pdf_path))
 
     try:
-        response = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            json=payload,
-            headers=headers,
-            timeout=20
-        )
-
-        if response.status_code in [200, 201, 202]:
-            return True, "E-mail enviado com sucesso."
-
-        return False, f"PDF gerado, mas a API Brevo retornou erro {response.status_code}: {response.text}"
-
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(remetente, senha)
+            smtp.send_message(msg)
+        return True, "E-mail enviado com sucesso."
     except Exception as e:
-        return False, f"PDF gerado, mas houve erro ao enviar e-mail pela API Brevo: {e}"
+        return False, f"Erro ao enviar e-mail: {e}"
+
 
 @app.route("/", methods=["GET", "POST"])
-
 def index():
     if request.method == "POST":
         professor = request.form.get("professor")
@@ -383,8 +356,7 @@ def index():
         }
         filename, pdf_path = gerar_pdf(dados)
         salvar_banco(dados, filename)
-        ok, msg = enviar_email(dados, pdf_path)
-        flash("Ocorrência registrada e PDF gerado. " + msg, "sucesso" if ok else "aviso")
+        flash("Ocorrência registrada e PDF gerado com sucesso.", "sucesso")
         return render_template("resultado.html", dados=dados, pdf_file=filename)
 
     turmas = sorted(set(a["turma"] for a in ALUNOS))
@@ -401,6 +373,31 @@ def historico():
         conn.row_factory = sqlite3.Row
         rows = conn.execute("SELECT * FROM ocorrencias ORDER BY id DESC LIMIT 100").fetchall()
     return render_template("historico.html", ocorrencias=rows)
+
+@app.route("/reenviar-email/<filename>", methods=["POST"])
+def reenviar_email(filename):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        ocorrencia = conn.execute(
+            "SELECT * FROM ocorrencias WHERE pdf = ?",
+            (filename,)
+        ).fetchone()
+
+    if not ocorrencia:
+        flash("Ocorrência não encontrada.", "erro")
+        return redirect(url_for("historico"))
+
+    dados = dict(ocorrencia)
+    pdf_path = os.path.join(PDF_DIR, filename)
+
+    if not os.path.exists(pdf_path):
+        flash("PDF não encontrado no servidor.", "erro")
+        return redirect(url_for("historico"))
+
+    ok, msg = enviar_email(dados, pdf_path)
+    flash(msg, "sucesso" if ok else "erro")
+
+    return redirect(url_for("historico"))
 
 if __name__ == "__main__":
     app.run(debug=True)
