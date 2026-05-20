@@ -316,7 +316,7 @@ def index():
             flash("Aluno não encontrado. Verifique a turma e o estudante selecionado.", "erro")
             return redirect(url_for("index"))
 
-        data_hora = datetime.now().strftime("%d/%m/%Y às %H:%M")
+        data_hora = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%d/%m/%Y às %H:%M")
         texto = gerar_texto(data_hora, professor, turma, aluno_nome, aluno["responsavel"], disciplina, tipo, intensidade, encaminhamento, observacoes)
         dados = {
             "data_hora": data_hora, "professor": professor, "turma": turma, "aluno": aluno_nome,
