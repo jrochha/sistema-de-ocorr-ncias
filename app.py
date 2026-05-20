@@ -571,6 +571,35 @@ def historico():
     return render_template("historico.html", ocorrencias=rows)
 
 
+@app.route("/reenviar-email/<filename>", methods=["POST"])
+def reenviar_email(filename):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+
+        ocorrencia = conn.execute(
+            "SELECT * FROM ocorrencias WHERE pdf = ?",
+            (filename,)
+        ).fetchone()
+
+    if not ocorrencia:
+        flash("Ocorrência não encontrada.", "erro")
+        return redirect(url_for("historico"))
+
+    dados = dict(ocorrencia)
+
+    pdf_path = os.path.join(PDF_DIR, filename)
+
+    if not os.path.exists(pdf_path):
+        flash("Arquivo PDF não encontrado.", "erro")
+        return redirect(url_for("historico"))
+
+    ok, msg = enviar_email(dados, pdf_path)
+
+    flash(msg, "sucesso" if ok else "erro")
+
+    return redirect(url_for("historico"))
+
+
 init_db()
 
 
