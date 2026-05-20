@@ -534,10 +534,7 @@ def index():
 
         ok, msg = enviar_email(dados, pdf_path)
 
-        flash(
-            "Ocorrência registrada e PDF gerado. " + msg,
-            "sucesso" if ok else "aviso",
-        )
+        flash( "Ocorrência registrada e PDF gerado com sucesso.", "sucesso"),
 
         return render_template("resultado.html", dados=dados, pdf_file=filename)
 
