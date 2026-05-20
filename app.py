@@ -310,6 +310,7 @@ def enviar_email(dados, pdf_path):
     remetente = os.environ.get("EMAIL_REMETENTE")
     senha = os.environ.get("EMAIL_SENHA_APP")
     destinatarios = [e.strip() for e in os.environ.get("EMAIL_DESTINATARIOS", "").split(",") if e.strip()]
+
     if not remetente or not senha or not destinatarios:
         return False, "E-mail não configurado nas variáveis de ambiente."
 
@@ -320,15 +321,22 @@ def enviar_email(dados, pdf_path):
     msg.set_content(f"Segue nova ocorrência registrada no sistema.\n\n{dados['texto']}")
 
     with open(pdf_path, "rb") as f:
-        msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=os.path.basename(pdf_path))
+        msg.add_attachment(
+            f.read(),
+            maintype="application",
+            subtype="pdf",
+            filename=os.path.basename(pdf_path)
+        )
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as smtp:
             smtp.login(remetente, senha)
             smtp.send_message(msg)
+
         return True, "E-mail enviado com sucesso."
+
     except Exception as e:
-        return False, f"Erro ao enviar e-mail: {e}"
+        return False, f"PDF gerado, mas houve erro ao enviar e-mail: {e}"
 
 
 @app.route("/", methods=["GET", "POST"])
