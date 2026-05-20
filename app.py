@@ -529,14 +529,18 @@ def index():
             "texto": texto,
         }
 
-        filename, pdf_path = gerar_pdf(dados)
+       filename, pdf_path = gerar_pdf(dados)
         salvar_banco(dados, filename)
 
-        ok, msg = enviar_email(dados, pdf_path)
+        flash( 
+            "Ocorrência registrada e PDF gerado com sucesso.", 
+            "sucesso"
+        )
 
-        flash( "Ocorrência registrada e PDF gerado com sucesso.", "sucesso"),
-
-        return render_template("resultado.html", dados=dados, pdf_file=filename)
+        return render_template(
+            "resultado.html", 
+            dados=dados, 
+            pdf_file= filename)
 
     turmas = sorted(set(a["turma"] for a in ALUNOS))
 
