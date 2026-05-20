@@ -22,14 +22,14 @@ DB_PATH = os.path.join(BASE_DIR, "ocorrencias.db")
 LOGO_PATH = os.path.join(BASE_DIR, "static", "logo.png")
 
 PROFESSORES = sorted([
-    "Ana Maria de Lima","Alliny Rodrigues Peixe", "Bibiana Maria Bispo", "Danielly Furlaneto Firmino",
-    "Evanilda de Souza Trindade", "Fabiola de Oliveira Herbella", "Felipe Paulo de Souza",
-    "Iwlly Rafaela Mendes", "Izaira Moreira Veiga", "Jaqueline Bonifácio Michelato",
-    "Janaína Letícia Panaggio", "Juliana Aparecida Gonçalves", "Juliana Ferri",
-    "Katy Tondelli", "Kelen Cristina Leão", "Lorena Cristina de Oliveira Fernandes",
-    "Lucas da Costa Ferreira", "Luzia Nogueira", "Marcel Dancini Rodrigues",
-    "Marco Aurélio Sant Ana", "Miriam Aparecida de Souza Dias", "Patrícia Janoni",
-    "Romilson Lopes Leite", "Thiago José da Rocha"
+    "Prof. Ana Maria de Lima", "Prof. Alliny Rodrigues Peixe", "Prof. Bibiana Maria Bispo", "Danielly Furlaneto Firmino - Assist. Adm.",
+    "Prof. Evanilda de Souza Trindade", "Prof. Fabiola de Oliveira Herbella", "Prof. Felipe Paulo de Souza",
+    "Prof. Iwlly Rafaela Mendes", "Izaira Moreira Veiga - Pedagoga", "Prof. Jaqueline Bonifácio Michelato",
+    "Janaína Letícia Panaggio - Secretária", "Juliana Aparecida Gonçalves - Pedagoga", "Prof. Juliana Ferri",
+    "Prof. Katy Tondelli", "Prof. Kelen Cristina Leão", "Prof. Lorena Cristina de Oliveira Fernandes",
+    "Lucas da Costa Ferreira - Assist. Adm.", "Prof. Luzia Nogueira", "Prof. Marcel Dancini Rodrigues",
+    "Prof. Marco Aurélio Sant Ana", "Prof. Miriam Aparecida de Souza Dias", "Prof. Patrícia Janoni",
+    "Romilson Lopes Leite - Inspetor", "Thiago José da Rocha - Diretor"
 ])
 
 DISCIPLINAS = [
