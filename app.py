@@ -22,7 +22,7 @@ DB_PATH = os.path.join(BASE_DIR, "ocorrencias.db")
 LOGO_PATH = os.path.join(BASE_DIR, "static", "logo.png")
 
 PROFESSORES = sorted([
-    "Ana Maria de Lima", "Bibiana Maria Bispo", "Danielly Furlaneto Firmino",
+    "Ana Maria de Lima","Alliny Rodrigues Peixe", "Bibiana Maria Bispo", "Danielly Furlaneto Firmino",
     "Evanilda de Souza Trindade", "Fabiola de Oliveira Herbella", "Felipe Paulo de Souza",
     "Iwlly Rafaela Mendes", "Izaira Moreira Veiga", "Jaqueline Bonifácio Michelato",
     "Janaína Letícia Panaggio", "Juliana Aparecida Gonçalves", "Juliana Ferri",
